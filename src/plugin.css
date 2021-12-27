@@ -40,7 +40,7 @@
 
 
   .mirror-button :before{
-    content: 'R';
+    content: 'M';
   }
 
 }
