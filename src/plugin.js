@@ -2,9 +2,44 @@ import videojs from 'video.js';
 import {version as VERSION} from '../package.json';
 
 const Plugin = videojs.getPlugin('plugin');
+const Button = videojs.getComponent('button');
 
 // Default options for the plugin.
 const defaults = {};
+
+class RotateButton extends Button {
+  /**
+   * Create rotate button.
+   *
+   * @param  {Player} player
+   *         A Video.js Player instance.
+   *
+   * @param  {Object} [options]
+   *         An optional options object.
+   *
+   *         While not a core part of the Video.js plugin architecture, a
+   *         second argument of options is a convenient way to accept inputs
+   *         from your plugin's caller.
+   */
+  constructor(player, options) {
+    super(player, options);
+    this._currentRotateDeg = 0;
+    this.controlText('Rotate');
+  }
+
+  buildCSSClass() {
+    return 'vjs-control vjs-button mirror-button';
+  }
+
+  handleClick() {
+    this.removeClass(`rotate-${this._currentRotateDeg}`);
+
+    this._currentRotateDeg = this._currentRotateDeg === 180 ? 0 : 180;
+
+    this.player().mirror().rotate({ rotate: this._currentRotateDeg});
+    this.addClass(`rotate-${this._currentRotateDeg}`);
+  }
+}
 
 /**
  * An advanced Video.js plugin. For more information on the API
@@ -34,8 +69,45 @@ class Mirror extends Plugin {
 
     this.player.ready(() => {
       this.player.addClass('vjs-mirror');
+      this.findSupportTransformProperty();
+      this.player.getChild('controlBar').addChild('rotatePlayerButton');
     });
   }
+
+  /**
+   * Find current browser supported transform css property.
+   */
+  findSupportTransformProperty() {
+    const player = this.player;
+    const properties = [
+      'transform',
+      'WebkitTransform',
+      'MozTransform',
+      'msTransform',
+      'OTransform'
+    ];
+
+    this._prop = properties[0];
+    if (typeof player.style !== 'undefined') {
+      for (const property of properties) {
+        if (typeof player.style[property] !== 'undefined') {
+          this._prop = property;
+          break;
+        }
+      }
+    }
+  }
+
+  rotate(options) {
+    const targetElement = this.player.el();
+    const videoElement = targetElement.getElementsByClassName('vjs-tech')[0];
+    const posterElement = targetElement.getElementsByClassName('vjs-poster')[0];
+
+    targetElement.style.overflow = 'hidden';
+    videoElement.style[this._prop] = `rotateY(${options.rotate}deg)`;
+    posterElement.style[this._prop] = `rotateY(${options.rotate}deg)`;
+  }
+
 }
 
 // Define default values for the plugin's `state` object here.
@@ -43,6 +115,9 @@ Mirror.defaultState = {};
 
 // Include the version number.
 Mirror.VERSION = VERSION;
+
+// Register button.
+videojs.registerComponent('rotatePlayerButton', RotateButton);
 
 // Register the plugin with video.js.
 videojs.registerPlugin('mirror', Mirror);

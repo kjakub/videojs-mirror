@@ -14,7 +14,7 @@
 
 # videojs-mirror
 
-flip horizontal
+mirror flip video horizontal
 
 ## Installation
 
