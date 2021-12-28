@@ -1,6 +1,6 @@
 {
   "name": "videojs-mirror",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "mirror flip video horizontal",
   "main": "cjs/plugin.js",
   "module": "es/plugin.js",
